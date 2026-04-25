@@ -1,0 +1,239 @@
+openapi: 3.0.3
+info:
+  title: Generated API
+  version: "1.0"
+paths:
+  /about:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AboutDTO'
+  /skills:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SkillDTO'
+
+  /projects:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDTO'
+
+  /experience:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExperienceDTO'
+
+  /education:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EducationDTO'
+
+  /social-link:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SocialDTO'
+
+  /certificate:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CertificateDTO'
+
+components:
+  schemas:
+    AboutDTO:
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 50
+        profession:
+          type: string
+          minLength: 2
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        about:
+          type: array
+          items:
+            type: string
+        experience:
+          type: number
+        degree:
+          type: string
+        role:
+          type: string
+        location:
+          type: string
+
+    SkillDTO:
+      type: object
+      required:
+        - category
+        - name
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+          minLength: 2
+        name:
+          type: string
+          minLength: 2
+          maxLength: 50
+        img:
+          type: string
+        stars:
+          type: integer
+          maximum: 5
+          minimum: 0
+          default: 3
+
+    ExperienceDTO:
+      type: object
+      required:
+        - companyName
+        - position
+        - startDate
+      properties:
+        id:
+          type: string
+        companyName:
+          type: string
+        position:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        about:
+          type: array
+          items:
+            type: string
+
+    EducationDTO:
+      type: object
+      required:
+        - stream
+        - clgName
+        - startYear
+      properties:
+        id:
+          type: string
+        stream:
+          type: string
+        clgName:
+          type: string
+        startYear:
+          type: integer
+        endYear:
+          type: integer
+        marks:
+          type: string
+        about:
+          type: array
+          items:
+            type: string
+
+    ProjectDTO:
+      type: object
+      required:
+        - category
+        - name
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        keyTech:
+          type: array
+          items:
+            type: string
+        githubLink:
+          type: string
+        liveLink:
+          type: string
+
+    SocialDTO:
+      type: object
+      required:
+        - name
+        - link
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        link:
+          type: string
+        img:
+          type: string
+
+    CertificateDTO:
+      type: object
+      required:
+        - name
+        - skill
+        - link
+        - year
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        skill:
+          type: string
+        year:
+          type: integer
+        link:
+          type: string
