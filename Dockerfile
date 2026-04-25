@@ -1,17 +1,13 @@
-# Use Java 21 (matches your pom)
-FROM eclipse-temurin:21-jdk
+# Use Maven + Java 21 image
+FROM maven:3.9.9-eclipse-temurin-21
 
-# Set working directory
 WORKDIR /app
 
-# Copy project files
+# Copy everything
 COPY . .
 
-# Build the app
-RUN ./mvnw clean package -DskipTests
+# Build app
+RUN mvn clean package -DskipTests
 
-# Expose port (Render uses dynamic PORT)
-EXPOSE 8080
-
-# Start app
+# Run app
 CMD ["java", "-jar", "target/quarkus-app/quarkus-run.jar"]
