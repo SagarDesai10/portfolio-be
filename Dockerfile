@@ -10,4 +10,4 @@ COPY . .
 RUN mvn clean package -DskipTests
 
 # Run app
-CMD ["java", "-jar", "target/quarkus-app/quarkus-run.jar"]
+CMD ["java", "-Djdk.tls.client.protocols=TLSv1.2,TLSv1.3", "-Djdk.tls.acknowledgeCloseNotify=true", "-jar", "target/quarkus-app/quarkus-run.jar"]
