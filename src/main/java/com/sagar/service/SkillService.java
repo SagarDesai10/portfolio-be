@@ -1,13 +1,13 @@
 package com.sagar.service;
 
+import io.smallrye.mutiny.Uni;
 import org.acme.beans.SkillDTO;
 
 import java.util.List;
 
 public interface SkillService {
-    public String createSkill(SkillDTO skillDTO);
-    public SkillDTO updateSkill(String id, SkillDTO skillDTO);
-    public String deleteSkill(String id);
-    public List<SkillDTO> getAllSkills();
+    Uni<String> createSkill(SkillDTO skillDTO);
+    Uni<SkillDTO> updateSkill(String id, SkillDTO skillDTO);
+    Uni<String> deleteSkill(String id);
+    Uni<List<SkillDTO>> getAllSkills();
 }
-

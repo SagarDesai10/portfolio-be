@@ -8,6 +8,7 @@ import com.sagar.service.impl.ExperiencServiceImpl;
 import com.sagar.util.AppConstants;
 import com.sagar.util.TestDataFactory;
 import com.sagar.validation.DateRangeOverlapValidator;
+import io.smallrye.mutiny.Uni;
 import org.acme.beans.ExperienceDTO;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,13 +47,13 @@ class ExperienceServiceImplTest {
 
     @Test
     void createExperience_validDTO_persistsAndReturnsSuccess() {
-        when(repository.listAll()).thenReturn(List.of());
+        when(repository.listAll()).thenReturn(Uni.createFrom().item(List.of()));
         when(mapper.toEntity(dto)).thenReturn(entity);
+        when(repository.persist(entity)).thenReturn(Uni.createFrom().item(entity));
 
-        String result = service.createExperience(dto);
+        String result = service.createExperience(dto).await().indefinitely();
 
         assertThat(result).isEqualTo(AppConstants.CREATED_SUCCESSFULLY);
-        verify(repository).persist(entity);
         verify(overlapValidator).validate(any(), isNull(), any(), eq("Experience"));
     }
 
@@ -62,7 +63,7 @@ class ExperienceServiceImplTest {
         bad.setStartDate("not-a-date");
         bad.setEndDate("Jun-2023");
 
-        assertThatThrownBy(() -> service.createExperience(bad))
+        assertThatThrownBy(() -> service.createExperience(bad).await().indefinitely())
                 .isInstanceOf(ApplicationException.class)
                 .extracting("statusCode").isEqualTo(AppConstants.STATUS_BAD_REQUEST);
     }
@@ -73,64 +74,64 @@ class ExperienceServiceImplTest {
         bad.setStartDate("Dec-2023");
         bad.setEndDate("Jan-2023");
 
-        assertThatThrownBy(() -> service.createExperience(bad))
+        assertThatThrownBy(() -> service.createExperience(bad).await().indefinitely())
                 .isInstanceOf(Exception.class);
     }
 
     @Test
     void getAllExperiences_returnsMappedList() {
-        when(repository.listAll()).thenReturn(List.of(entity));
+        when(repository.listAll()).thenReturn(Uni.createFrom().item(List.of(entity)));
         when(mapper.toDTOList(List.of(entity))).thenReturn(List.of(dto));
 
-        List<ExperienceDTO> result = service.getAllExperiences();
+        List<ExperienceDTO> result = service.getAllExperiences().await().indefinitely();
 
         assertThat(result).hasSize(1).contains(dto);
     }
 
     @Test
     void updateExperience_withValidId_updatesAndReturnsDTO() {
-        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Optional.of(entity));
-        when(repository.listAll()).thenReturn(List.of());
+        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Uni.createFrom().item(Optional.of(entity)));
+        when(repository.listAll()).thenReturn(Uni.createFrom().item(List.of()));
+        when(repository.update(entity)).thenReturn(Uni.createFrom().item(entity));
         when(mapper.toDTO(entity)).thenReturn(dto);
 
-        ExperienceDTO result = service.updateExperience(validId, dto);
+        ExperienceDTO result = service.updateExperience(validId, dto).await().indefinitely();
 
         assertThat(result).isEqualTo(dto);
         verify(mapper).updateEntityFromDTO(dto, entity);
-        verify(repository).update(entity);
     }
 
     @Test
     void updateExperience_withInvalidId_throwsBadRequest() {
-        assertThatThrownBy(() -> service.updateExperience(TestDataFactory.INVALID_ID, dto))
+        assertThatThrownBy(() -> service.updateExperience(TestDataFactory.INVALID_ID, dto).await().indefinitely())
                 .isInstanceOf(ApplicationException.class)
                 .extracting("statusCode").isEqualTo(AppConstants.STATUS_BAD_REQUEST);
     }
 
     @Test
     void updateExperience_withUnknownId_throwsNotFound() {
-        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Optional.empty());
+        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Uni.createFrom().item(Optional.empty()));
 
-        assertThatThrownBy(() -> service.updateExperience(validId, dto))
+        assertThatThrownBy(() -> service.updateExperience(validId, dto).await().indefinitely())
                 .isInstanceOf(ApplicationException.class)
                 .extracting("statusCode").isEqualTo(AppConstants.STATUS_NOT_FOUND);
     }
 
     @Test
     void deleteExperience_withValidId_deletesAndReturnsSuccess() {
-        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Optional.of(entity));
+        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Uni.createFrom().item(Optional.of(entity)));
+        when(repository.deleteById(entity.id)).thenReturn(Uni.createFrom().item(true));
 
-        String result = service.deleteExperience(validId);
+        String result = service.deleteExperience(validId).await().indefinitely();
 
         assertThat(result).isEqualTo(AppConstants.DELETED_SUCCESSFULLY);
-        verify(repository).deleteById(entity.id);
     }
 
     @Test
     void deleteExperience_withUnknownId_throwsNotFound() {
-        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Optional.empty());
+        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Uni.createFrom().item(Optional.empty()));
 
-        assertThatThrownBy(() -> service.deleteExperience(validId))
+        assertThatThrownBy(() -> service.deleteExperience(validId).await().indefinitely())
                 .isInstanceOf(ApplicationException.class)
                 .extracting("statusCode").isEqualTo(AppConstants.STATUS_NOT_FOUND);
     }
@@ -141,11 +142,11 @@ class ExperienceServiceImplTest {
         presentDto.setStartDate("Jan-2023");
         presentDto.setEndDate("present");
 
-        when(repository.listAll()).thenReturn(List.of());
+        when(repository.listAll()).thenReturn(Uni.createFrom().item(List.of()));
         when(mapper.toEntity(presentDto)).thenReturn(entity);
+        when(repository.persist(entity)).thenReturn(Uni.createFrom().item(entity));
 
-        assertThatCode(() -> service.createExperience(presentDto))
+        assertThatCode(() -> service.createExperience(presentDto).await().indefinitely())
                 .doesNotThrowAnyException();
     }
 }
-

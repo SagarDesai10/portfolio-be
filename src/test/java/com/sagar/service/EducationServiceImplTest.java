@@ -8,6 +8,7 @@ import com.sagar.service.impl.EducationServiceImpl;
 import com.sagar.util.AppConstants;
 import com.sagar.util.TestDataFactory;
 import com.sagar.validation.DateRangeOverlapValidator;
+import io.smallrye.mutiny.Uni;
 import org.acme.beans.EducationDTO;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,13 +47,13 @@ class EducationServiceImplTest {
 
     @Test
     void createEducation_validDTO_persistsAndReturnsSuccess() {
-        when(repository.listAll()).thenReturn(List.of());
+        when(repository.listAll()).thenReturn(Uni.createFrom().item(List.of()));
         when(mapper.toEntity(dto)).thenReturn(entity);
+        when(repository.persist(entity)).thenReturn(Uni.createFrom().item(entity));
 
-        String result = service.createEducation(dto);
+        String result = service.createEducation(dto).await().indefinitely();
 
         assertThat(result).isEqualTo(AppConstants.CREATED_SUCCESSFULLY);
-        verify(repository).persist(entity);
         verify(overlapValidator).validate(any(), isNull(), any(), eq("Education"));
     }
 
@@ -61,9 +62,8 @@ class EducationServiceImplTest {
         EducationDTO bad = new EducationDTO();
         bad.setClgName("MIT");
         bad.setStream("CS");
-        // startYear is null
 
-        assertThatThrownBy(() -> service.createEducation(bad))
+        assertThatThrownBy(() -> service.createEducation(bad).await().indefinitely())
                 .isInstanceOf(ApplicationException.class)
                 .extracting("statusCode").isEqualTo(AppConstants.STATUS_BAD_REQUEST);
     }
@@ -80,58 +80,58 @@ class EducationServiceImplTest {
 
     @Test
     void getAllEducations_returnsMappedList() {
-        when(repository.listAll()).thenReturn(List.of(entity));
+        when(repository.listAll()).thenReturn(Uni.createFrom().item(List.of(entity)));
         when(mapper.toDTOList(List.of(entity))).thenReturn(List.of(dto));
 
-        List<EducationDTO> result = service.getAllEducations();
+        List<EducationDTO> result = service.getAllEducations().await().indefinitely();
 
         assertThat(result).hasSize(1).contains(dto);
     }
 
     @Test
     void updateEducation_withValidId_updatesAndReturnsDTO() {
-        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Optional.of(entity));
-        when(repository.listAll()).thenReturn(List.of());
+        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Uni.createFrom().item(Optional.of(entity)));
+        when(repository.listAll()).thenReturn(Uni.createFrom().item(List.of()));
+        when(repository.update(entity)).thenReturn(Uni.createFrom().item(entity));
         when(mapper.toDTO(entity)).thenReturn(dto);
 
-        EducationDTO result = service.updateEducation(validId, dto);
+        EducationDTO result = service.updateEducation(validId, dto).await().indefinitely();
 
         assertThat(result).isEqualTo(dto);
         verify(mapper).updateEntityFromDTO(dto, entity);
-        verify(repository).update(entity);
     }
 
     @Test
     void updateEducation_withInvalidId_throwsBadRequest() {
-        assertThatThrownBy(() -> service.updateEducation(TestDataFactory.INVALID_ID, dto))
+        assertThatThrownBy(() -> service.updateEducation(TestDataFactory.INVALID_ID, dto).await().indefinitely())
                 .isInstanceOf(ApplicationException.class)
                 .extracting("statusCode").isEqualTo(AppConstants.STATUS_BAD_REQUEST);
     }
 
     @Test
     void updateEducation_withUnknownId_throwsNotFound() {
-        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Optional.empty());
+        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Uni.createFrom().item(Optional.empty()));
 
-        assertThatThrownBy(() -> service.updateEducation(validId, dto))
+        assertThatThrownBy(() -> service.updateEducation(validId, dto).await().indefinitely())
                 .isInstanceOf(ApplicationException.class)
                 .extracting("statusCode").isEqualTo(AppConstants.STATUS_NOT_FOUND);
     }
 
     @Test
     void deleteEducation_withValidId_deletesAndReturnsSuccess() {
-        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Optional.of(entity));
+        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Uni.createFrom().item(Optional.of(entity)));
+        when(repository.deleteById(entity.id)).thenReturn(Uni.createFrom().item(true));
 
-        String result = service.deleteEducation(validId);
+        String result = service.deleteEducation(validId).await().indefinitely();
 
         assertThat(result).isEqualTo(AppConstants.DELETED_SUCCESSFULLY);
-        verify(repository).deleteById(entity.id);
     }
 
     @Test
     void deleteEducation_withUnknownId_throwsNotFound() {
-        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Optional.empty());
+        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Uni.createFrom().item(Optional.empty()));
 
-        assertThatThrownBy(() -> service.deleteEducation(validId))
+        assertThatThrownBy(() -> service.deleteEducation(validId).await().indefinitely())
                 .isInstanceOf(ApplicationException.class)
                 .extracting("statusCode").isEqualTo(AppConstants.STATUS_NOT_FOUND);
     }
@@ -140,13 +140,12 @@ class EducationServiceImplTest {
     void createEducation_nullEndYear_usesCurrentYearMonth() {
         EducationDTO noEnd = new EducationDTO();
         noEnd.setStartYear(2018);
-        // endYear is null → should default to current year
 
-        when(repository.listAll()).thenReturn(List.of());
+        when(repository.listAll()).thenReturn(Uni.createFrom().item(List.of()));
         when(mapper.toEntity(noEnd)).thenReturn(entity);
+        when(repository.persist(entity)).thenReturn(Uni.createFrom().item(entity));
 
-        assertThatCode(() -> service.createEducation(noEnd))
+        assertThatCode(() -> service.createEducation(noEnd).await().indefinitely())
                 .doesNotThrowAnyException();
     }
 }
-

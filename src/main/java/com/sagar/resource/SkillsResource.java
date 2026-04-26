@@ -3,6 +3,7 @@ package com.sagar.resource;
 import com.sagar.dto.ResponseDTO;
 import com.sagar.service.SkillService;
 import com.sagar.util.AppConstants;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -18,19 +19,22 @@ public class SkillsResource extends CommonResource {
     private SkillService skillService;
 
     @POST
-    public ResponseDTO<String> createSkills(@Valid SkillDTO skillDTO) {
-        return buildResponse(AppConstants.SKILL_CREATED, AppConstants.STATUS_CREATED, skillService.createSkill(skillDTO));
+    public Uni<ResponseDTO<String>> createSkills(@Valid SkillDTO skillDTO) {
+        return skillService.createSkill(skillDTO)
+                .map(r -> buildResponse(AppConstants.SKILL_CREATED, AppConstants.STATUS_CREATED, r));
     }
 
     @PATCH
     @Path("/{id}")
-    public ResponseDTO<SkillDTO> updateSkills(@PathParam("id") String id, @Valid SkillDTO skillDTO) {
-        return buildResponse(AppConstants.SKILL_UPDATED, AppConstants.STATUS_OK, skillService.updateSkill(id, skillDTO));
+    public Uni<ResponseDTO<SkillDTO>> updateSkills(@PathParam("id") String id, @Valid SkillDTO skillDTO) {
+        return skillService.updateSkill(id, skillDTO)
+                .map(r -> buildResponse(AppConstants.SKILL_UPDATED, AppConstants.STATUS_OK, r));
     }
 
     @DELETE
     @Path("/{id}")
-    public ResponseDTO<String> deleteSkills(@PathParam("id") String id) {
-        return buildResponse(AppConstants.SKILL_DELETED, AppConstants.STATUS_OK, skillService.deleteSkill(id));
+    public Uni<ResponseDTO<String>> deleteSkills(@PathParam("id") String id) {
+        return skillService.deleteSkill(id)
+                .map(r -> buildResponse(AppConstants.SKILL_DELETED, AppConstants.STATUS_OK, r));
     }
 }

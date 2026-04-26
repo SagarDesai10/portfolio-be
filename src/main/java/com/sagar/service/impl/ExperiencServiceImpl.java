@@ -9,13 +9,13 @@ import com.sagar.util.AppConstants;
 import com.sagar.validation.DateRange;
 import com.sagar.validation.DateRangeOverlapValidator;
 import com.sagar.validation.DateRangeParser;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.beans.ExperienceDTO;
 import org.bson.types.ObjectId;
 
 import java.util.List;
-import java.util.Optional;
 
 @ApplicationScoped
 public class ExperiencServiceImpl implements ExperienceService {
@@ -30,45 +30,50 @@ public class ExperiencServiceImpl implements ExperienceService {
     private DateRangeOverlapValidator overlapValidator;
 
     @Override
-    public String createExperience(ExperienceDTO experienceDTO) {
+    public Uni<String> createExperience(ExperienceDTO experienceDTO) {
         DateRange candidate = buildAndValidateRange(experienceDTO);
-        overlapValidator.validate(candidate, null, repository.listAll(), "Experience");
-        Experience experience = mapper.toEntity(experienceDTO);
-        repository.persist(experience);
-        return AppConstants.CREATED_SUCCESSFULLY;
+        return repository.listAll()
+                .flatMap(list -> {
+                    overlapValidator.validate(candidate, null, list, "Experience");
+                    return repository.persist(mapper.toEntity(experienceDTO));
+                })
+                .map(e -> AppConstants.CREATED_SUCCESSFULLY);
     }
 
     @Override
-    public ExperienceDTO updateExperience(String id, ExperienceDTO experienceDTO) {
-        Experience existing = findExperience(id);
+    public Uni<ExperienceDTO> updateExperience(String id, ExperienceDTO experienceDTO) {
         DateRange candidate = buildAndValidateRange(experienceDTO);
-        overlapValidator.validate(candidate, id, repository.listAll(), "Experience");
-        mapper.updateEntityFromDTO(experienceDTO, existing);
-        repository.update(existing);
-        return mapper.toDTO(existing);
+        return findExperience(id)
+                .flatMap(entity -> repository.listAll()
+                        .flatMap(list -> {
+                            overlapValidator.validate(candidate, id, list, "Experience");
+                            mapper.updateEntityFromDTO(experienceDTO, entity);
+                            return repository.update(entity);
+                        }))
+                .map(mapper::toDTO);
     }
 
     @Override
-    public String deleteExperience(String id) {
-        Experience experience = findExperience(id);
-        repository.deleteById(experience.id);
-        return AppConstants.DELETED_SUCCESSFULLY;
+    public Uni<String> deleteExperience(String id) {
+        return findExperience(id)
+                .flatMap(entity -> repository.deleteById(entity.id))
+                .map(deleted -> AppConstants.DELETED_SUCCESSFULLY);
     }
 
     @Override
-    public List<ExperienceDTO> getAllExperiences() {
-        return mapper.toDTOList(repository.listAll());
+    public Uni<List<ExperienceDTO>> getAllExperiences() {
+        return repository.listAll()
+                .map(mapper::toDTOList);
     }
 
-    private Experience findExperience(String id) {
+    private Uni<Experience> findExperience(String id) {
         if (id == null || !ObjectId.isValid(id)) {
-            throw new ApplicationException(AppConstants.INVALID_ID, AppConstants.STATUS_BAD_REQUEST);
+            return Uni.createFrom().failure(
+                    new ApplicationException(AppConstants.INVALID_ID, AppConstants.STATUS_BAD_REQUEST));
         }
-        Optional<Experience> optExperience = repository.findByIdOptional(new ObjectId(id));
-        if (optExperience.isEmpty()) {
-            throw new ApplicationException(AppConstants.EXPERIENCE_NOT_FOUND, AppConstants.STATUS_NOT_FOUND);
-        }
-        return optExperience.get();
+        return repository.findByIdOptional(new ObjectId(id))
+                .map(opt -> opt.orElseThrow(() ->
+                        new ApplicationException(AppConstants.EXPERIENCE_NOT_FOUND, AppConstants.STATUS_NOT_FOUND)));
     }
 
     private DateRange buildAndValidateRange(ExperienceDTO dto) {

@@ -1,11 +1,11 @@
 package com.sagar.service;
 
+import io.smallrye.mutiny.Uni;
 import org.acme.beans.AboutDTO;
 
 public interface AboutService {
-    String createAbout(AboutDTO aboutDTO);
-    AboutDTO updateAbout(String id, AboutDTO aboutDTO);
-    String deleteAbout(String id);
-    AboutDTO getAbout();
+    Uni<String> createAbout(AboutDTO aboutDTO);
+    Uni<AboutDTO> updateAbout(String id, AboutDTO aboutDTO);
+    Uni<String> deleteAbout(String id);
+    Uni<AboutDTO> getAbout();
 }
-

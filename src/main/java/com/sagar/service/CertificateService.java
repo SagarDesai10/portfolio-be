@@ -1,13 +1,13 @@
 package com.sagar.service;
 
+import io.smallrye.mutiny.Uni;
 import org.acme.beans.CertificateDTO;
 
 import java.util.List;
 
 public interface CertificateService {
-    public String createCertificate(CertificateDTO certificateDTO);
-    public CertificateDTO updateCertificate(String id, CertificateDTO certificateDTO);
-    public String deleteCertificate(String id);
-    public List<CertificateDTO> getAllCertificates();
+    Uni<String> createCertificate(CertificateDTO certificateDTO);
+    Uni<CertificateDTO> updateCertificate(String id, CertificateDTO certificateDTO);
+    Uni<String> deleteCertificate(String id);
+    Uni<List<CertificateDTO>> getAllCertificates();
 }
-

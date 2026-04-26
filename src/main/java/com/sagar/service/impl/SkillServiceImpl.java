@@ -6,13 +6,13 @@ import com.sagar.mapper.SkillMapper;
 import com.sagar.repository.SkillRepository;
 import com.sagar.service.SkillService;
 import com.sagar.util.AppConstants;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.beans.SkillDTO;
 import org.bson.types.ObjectId;
 
 import java.util.List;
-import java.util.Optional;
 
 @ApplicationScoped
 public class SkillServiceImpl implements SkillService {
@@ -24,40 +24,41 @@ public class SkillServiceImpl implements SkillService {
     private SkillMapper mapper;
 
     @Override
-    public String createSkill(SkillDTO skillDTO) {
-        Skill skill = mapper.toEntity(skillDTO);
-        repository.persist(skill);
-        return AppConstants.CREATED_SUCCESSFULLY;
+    public Uni<String> createSkill(SkillDTO skillDTO) {
+        return repository.persist(mapper.toEntity(skillDTO))
+                .map(e -> AppConstants.CREATED_SUCCESSFULLY);
     }
 
     @Override
-    public SkillDTO updateSkill(String id, SkillDTO skillDTO) {
-        Skill skill = findSkill(id);
-        mapper.updateEntityFromDTO(skillDTO, skill);
-        repository.update(skill);
-        return mapper.toDTO(skill);
+    public Uni<SkillDTO> updateSkill(String id, SkillDTO skillDTO) {
+        return findSkill(id)
+                .flatMap(entity -> {
+                    mapper.updateEntityFromDTO(skillDTO, entity);
+                    return repository.update(entity);
+                })
+                .map(mapper::toDTO);
     }
 
     @Override
-    public String deleteSkill(String id) {
-        Skill skill = findSkill(id);
-        repository.deleteById(skill.id);
-        return AppConstants.DELETED_SUCCESSFULLY;
+    public Uni<String> deleteSkill(String id) {
+        return findSkill(id)
+                .flatMap(entity -> repository.deleteById(entity.id))
+                .map(deleted -> AppConstants.DELETED_SUCCESSFULLY);
     }
 
     @Override
-    public List<SkillDTO> getAllSkills() {
-        return mapper.toDTOList(repository.listAll());
+    public Uni<List<SkillDTO>> getAllSkills() {
+        return repository.listAll()
+                .map(mapper::toDTOList);
     }
 
-    private Skill findSkill(String id) {
+    private Uni<Skill> findSkill(String id) {
         if (id == null || !ObjectId.isValid(id)) {
-            throw new ApplicationException(AppConstants.INVALID_ID, AppConstants.STATUS_BAD_REQUEST);
+            return Uni.createFrom().failure(
+                    new ApplicationException(AppConstants.INVALID_ID, AppConstants.STATUS_BAD_REQUEST));
         }
-        Optional<Skill> optSkill = repository.findByIdOptional(new ObjectId(id));
-        if (optSkill.isEmpty()) {
-            throw new ApplicationException(AppConstants.SKILL_NOT_FOUND, AppConstants.STATUS_NOT_FOUND);
-        }
-        return optSkill.get();
+        return repository.findByIdOptional(new ObjectId(id))
+                .map(opt -> opt.orElseThrow(() ->
+                        new ApplicationException(AppConstants.SKILL_NOT_FOUND, AppConstants.STATUS_NOT_FOUND)));
     }
 }

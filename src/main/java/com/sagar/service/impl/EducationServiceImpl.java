@@ -8,6 +8,7 @@ import com.sagar.service.EducationService;
 import com.sagar.util.AppConstants;
 import com.sagar.validation.DateRange;
 import com.sagar.validation.DateRangeOverlapValidator;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.beans.EducationDTO;
@@ -16,7 +17,6 @@ import org.bson.types.ObjectId;
 import java.time.Month;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.Optional;
 
 @ApplicationScoped
 public class EducationServiceImpl implements EducationService {
@@ -31,45 +31,50 @@ public class EducationServiceImpl implements EducationService {
     private DateRangeOverlapValidator overlapValidator;
 
     @Override
-    public String createEducation(EducationDTO educationDTO) {
+    public Uni<String> createEducation(EducationDTO educationDTO) {
         DateRange candidate = buildAndValidateRange(educationDTO);
-        overlapValidator.validate(candidate, null, repository.listAll(), "Education");
-        Education education = mapper.toEntity(educationDTO);
-        repository.persist(education);
-        return AppConstants.CREATED_SUCCESSFULLY;
+        return repository.listAll()
+                .flatMap(list -> {
+                    overlapValidator.validate(candidate, null, list, "Education");
+                    return repository.persist(mapper.toEntity(educationDTO));
+                })
+                .map(e -> AppConstants.CREATED_SUCCESSFULLY);
     }
 
     @Override
-    public EducationDTO updateEducation(String id, EducationDTO educationDTO) {
-        Education education = findEducation(id);
+    public Uni<EducationDTO> updateEducation(String id, EducationDTO educationDTO) {
         DateRange candidate = buildAndValidateRange(educationDTO);
-        overlapValidator.validate(candidate, id, repository.listAll(), "Education");
-        mapper.updateEntityFromDTO(educationDTO, education);
-        repository.update(education);
-        return mapper.toDTO(education);
+        return findEducation(id)
+                .flatMap(entity -> repository.listAll()
+                        .flatMap(list -> {
+                            overlapValidator.validate(candidate, id, list, "Education");
+                            mapper.updateEntityFromDTO(educationDTO, entity);
+                            return repository.update(entity);
+                        }))
+                .map(mapper::toDTO);
     }
 
     @Override
-    public String deleteEducation(String id) {
-        Education education = findEducation(id);
-        repository.deleteById(education.id);
-        return AppConstants.DELETED_SUCCESSFULLY;
+    public Uni<String> deleteEducation(String id) {
+        return findEducation(id)
+                .flatMap(entity -> repository.deleteById(entity.id))
+                .map(deleted -> AppConstants.DELETED_SUCCESSFULLY);
     }
 
     @Override
-    public List<EducationDTO> getAllEducations() {
-        return mapper.toDTOList(repository.listAll());
+    public Uni<List<EducationDTO>> getAllEducations() {
+        return repository.listAll()
+                .map(mapper::toDTOList);
     }
 
-    private Education findEducation(String id) {
+    private Uni<Education> findEducation(String id) {
         if (id == null || !ObjectId.isValid(id)) {
-            throw new ApplicationException(AppConstants.INVALID_ID, AppConstants.STATUS_BAD_REQUEST);
+            return Uni.createFrom().failure(
+                    new ApplicationException(AppConstants.INVALID_ID, AppConstants.STATUS_BAD_REQUEST));
         }
-        Optional<Education> optEducation = repository.findByIdOptional(new ObjectId(id));
-        if (optEducation.isEmpty()) {
-            throw new ApplicationException(AppConstants.EDUCATION_NOT_FOUND, AppConstants.STATUS_NOT_FOUND);
-        }
-        return optEducation.get();
+        return repository.findByIdOptional(new ObjectId(id))
+                .map(opt -> opt.orElseThrow(() ->
+                        new ApplicationException(AppConstants.EDUCATION_NOT_FOUND, AppConstants.STATUS_NOT_FOUND)));
     }
 
     private DateRange buildAndValidateRange(EducationDTO dto) {
