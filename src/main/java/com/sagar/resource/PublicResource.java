@@ -3,8 +3,6 @@ package com.sagar.resource;
 import com.sagar.dto.ResponseDTO;
 import com.sagar.service.*;
 import com.sagar.util.AppConstants;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.annotation.Resource;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -41,57 +39,43 @@ public class PublicResource extends CommonResource {
 
     @GET
     @Path("/about")
-    public Uni<ResponseDTO<AboutDTO>> getAboutDetails() {
-        return Uni.createFrom().deferred(() -> aboutService.getAbout())
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.ABOUT_FETCHED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<AboutDTO> getAboutDetails() {
+        return buildResponse(AppConstants.ABOUT_FETCHED, AppConstants.STATUS_OK, aboutService.getAbout());
     }
 
     @GET
     @Path("/skills")
-    public Uni<ResponseDTO<List<SkillDTO>>> getSkillDetails() {
-        return Uni.createFrom().deferred(() -> skillService.getAllSkills())
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.SKILL_FETCHED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<List<SkillDTO>> getSkillDetails() {
+        return buildResponse(AppConstants.SKILL_FETCHED, AppConstants.STATUS_OK, skillService.getAllSkills());
     }
 
     @GET
     @Path("/projects")
-    public Uni<ResponseDTO<List<ProjectDTO>>> getProjectDetails() {
-        return Uni.createFrom().deferred(() -> projectService.getAllProjects())
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.PROJECT_FETCHED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<List<ProjectDTO>> getProjectDetails() {
+        return buildResponse(AppConstants.PROJECT_FETCHED, AppConstants.STATUS_OK, projectService.getAllProjects());
     }
 
     @GET
     @Path("/experience")
-    public Uni<ResponseDTO<List<ExperienceDTO>>> getExperienceDetails() {
-        return Uni.createFrom().deferred(() -> experienceService.getAllExperiences())
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.EXPERIENCE_FETCHED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<List<ExperienceDTO>> getExperienceDetails() {
+        return buildResponse(AppConstants.EXPERIENCE_FETCHED, AppConstants.STATUS_OK, experienceService.getAllExperiences());
     }
 
     @GET
     @Path("/education")
-    public Uni<ResponseDTO<List<EducationDTO>>> getEducationDetails() {
-        return Uni.createFrom().deferred(() -> educationService.getAllEducations())
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.EDUCATION_FETCHED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<List<EducationDTO>> getEducationDetails() {
+        return buildResponse(AppConstants.EDUCATION_FETCHED, AppConstants.STATUS_OK, educationService.getAllEducations());
     }
 
     @GET
     @Path("/social-link")
-    public Uni<ResponseDTO<List<SocialDTO>>> getSocialDetails() {
-        return Uni.createFrom().deferred(() -> socialLinkService.getAllSocialLink())
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.SOCIAL_FETCHED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<List<SocialDTO>> getSocialDetails() {
+        return buildResponse(AppConstants.SOCIAL_FETCHED, AppConstants.STATUS_OK, socialLinkService.getAllSocialLink());
     }
 
     @GET
     @Path("/certificate")
-    public Uni<ResponseDTO<List<CertificateDTO>>> getCertificateDetails() {
-        return Uni.createFrom().deferred(() -> certificateService.getAllCertificates())
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.CERTIFICATE_FETCHED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<List<CertificateDTO>> getCertificateDetails() {
+        return buildResponse(AppConstants.CERTIFICATE_FETCHED, AppConstants.STATUS_OK, certificateService.getAllCertificates());
     }
 }
