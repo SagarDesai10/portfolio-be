@@ -4,6 +4,7 @@ import com.sagar.dto.ResponseDTO;
 import com.sagar.service.SocialLinkService;
 import com.sagar.util.AppConstants;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -20,21 +21,24 @@ public class SocialLinkResource extends CommonResource {
 
     @POST
     public Uni<ResponseDTO<String>> createSocialLink(@Valid SocialDTO socialDTO) {
-        return service.createSocialLink(socialDTO)
+        return Uni.createFrom().deferred(() -> service.createSocialLink(socialDTO))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .map(r -> buildResponse(AppConstants.SOCIAL_CREATED, AppConstants.STATUS_CREATED, r));
     }
 
     @PATCH
     @Path("/{id}")
     public Uni<ResponseDTO<SocialDTO>> updateSocialLink(@PathParam("id") String id, @Valid SocialDTO socialDTO) {
-        return service.updateSocialLink(id, socialDTO)
+        return Uni.createFrom().deferred(() -> service.updateSocialLink(id, socialDTO))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .map(r -> buildResponse(AppConstants.SOCIAL_UPDATED, AppConstants.STATUS_OK, r));
     }
 
     @DELETE
     @Path("/{id}")
     public Uni<ResponseDTO<String>> deleteSocialLink(@PathParam("id") String id) {
-        return service.deleteSocialLink(id)
+        return Uni.createFrom().deferred(() -> service.deleteSocialLink(id))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .map(r -> buildResponse(AppConstants.SOCIAL_DELETED, AppConstants.STATUS_OK, r));
     }
 }

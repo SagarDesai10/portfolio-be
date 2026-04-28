@@ -4,6 +4,7 @@ import com.sagar.dto.ResponseDTO;
 import com.sagar.service.SkillService;
 import com.sagar.util.AppConstants;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -20,21 +21,24 @@ public class SkillsResource extends CommonResource {
 
     @POST
     public Uni<ResponseDTO<String>> createSkills(@Valid SkillDTO skillDTO) {
-        return skillService.createSkill(skillDTO)
+        return Uni.createFrom().deferred(() -> skillService.createSkill(skillDTO))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .map(r -> buildResponse(AppConstants.SKILL_CREATED, AppConstants.STATUS_CREATED, r));
     }
 
     @PATCH
     @Path("/{id}")
     public Uni<ResponseDTO<SkillDTO>> updateSkills(@PathParam("id") String id, @Valid SkillDTO skillDTO) {
-        return skillService.updateSkill(id, skillDTO)
+        return Uni.createFrom().deferred(() -> skillService.updateSkill(id, skillDTO))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .map(r -> buildResponse(AppConstants.SKILL_UPDATED, AppConstants.STATUS_OK, r));
     }
 
     @DELETE
     @Path("/{id}")
     public Uni<ResponseDTO<String>> deleteSkills(@PathParam("id") String id) {
-        return skillService.deleteSkill(id)
+        return Uni.createFrom().deferred(() -> skillService.deleteSkill(id))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .map(r -> buildResponse(AppConstants.SKILL_DELETED, AppConstants.STATUS_OK, r));
     }
 }
