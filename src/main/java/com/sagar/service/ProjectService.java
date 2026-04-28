@@ -1,13 +1,12 @@
 package com.sagar.service;
 
-import io.smallrye.mutiny.Uni;
 import org.acme.beans.ProjectDTO;
 
 import java.util.List;
 
 public interface ProjectService {
-    Uni<String> createProject(ProjectDTO projectDTO);
-    Uni<ProjectDTO> updateProject(String id, ProjectDTO projectDTO);
-    Uni<String> deleteProject(String id);
-    Uni<List<ProjectDTO>> getAllProjects();
+    String createProject(ProjectDTO projectDTO);
+    ProjectDTO updateProject(String id, ProjectDTO projectDTO);
+    String deleteProject(String id);
+    List<ProjectDTO> getAllProjects();
 }

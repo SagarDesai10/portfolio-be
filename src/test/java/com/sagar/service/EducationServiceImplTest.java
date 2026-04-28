@@ -8,7 +8,6 @@ import com.sagar.service.impl.EducationServiceImpl;
 import com.sagar.util.AppConstants;
 import com.sagar.util.TestDataFactory;
 import com.sagar.validation.DateRangeOverlapValidator;
-import io.smallrye.mutiny.Uni;
 import org.acme.beans.EducationDTO;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,14 +46,14 @@ class EducationServiceImplTest {
 
     @Test
     void createEducation_validDTO_persistsAndReturnsSuccess() {
-        when(repository.listAll()).thenReturn(Uni.createFrom().item(List.of()));
+        when(repository.listAll()).thenReturn(List.of());
         when(mapper.toEntity(dto)).thenReturn(entity);
-        when(repository.persist(entity)).thenReturn(Uni.createFrom().item(entity));
 
-        String result = service.createEducation(dto).await().indefinitely();
+        String result = service.createEducation(dto);
 
         assertThat(result).isEqualTo(AppConstants.CREATED_SUCCESSFULLY);
         verify(overlapValidator).validate(any(), isNull(), any(), eq("Education"));
+        verify(repository).persist(entity);
     }
 
     @Test
@@ -63,7 +62,7 @@ class EducationServiceImplTest {
         bad.setClgName("MIT");
         bad.setStream("CS");
 
-        assertThatThrownBy(() -> service.createEducation(bad).await().indefinitely())
+        assertThatThrownBy(() -> service.createEducation(bad))
                 .isInstanceOf(ApplicationException.class)
                 .extracting("statusCode").isEqualTo(AppConstants.STATUS_BAD_REQUEST);
     }
@@ -72,7 +71,7 @@ class EducationServiceImplTest {
     void createEducation_startAfterEnd_throwsIllegalArgument() {
         EducationDTO bad = new EducationDTO();
         bad.setStartYear(2024);
-        bad.setEndYear(2020);  // end before start
+        bad.setEndYear(2020);
 
         assertThatThrownBy(() -> service.createEducation(bad))
                 .isInstanceOf(Exception.class);
@@ -80,58 +79,58 @@ class EducationServiceImplTest {
 
     @Test
     void getAllEducations_returnsMappedList() {
-        when(repository.listAll()).thenReturn(Uni.createFrom().item(List.of(entity)));
+        when(repository.listAll()).thenReturn(List.of(entity));
         when(mapper.toDTOList(List.of(entity))).thenReturn(List.of(dto));
 
-        List<EducationDTO> result = service.getAllEducations().await().indefinitely();
+        List<EducationDTO> result = service.getAllEducations();
 
         assertThat(result).hasSize(1).contains(dto);
     }
 
     @Test
     void updateEducation_withValidId_updatesAndReturnsDTO() {
-        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Uni.createFrom().item(Optional.of(entity)));
-        when(repository.listAll()).thenReturn(Uni.createFrom().item(List.of()));
-        when(repository.update(entity)).thenReturn(Uni.createFrom().item(entity));
+        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Optional.of(entity));
+        when(repository.listAll()).thenReturn(List.of());
         when(mapper.toDTO(entity)).thenReturn(dto);
 
-        EducationDTO result = service.updateEducation(validId, dto).await().indefinitely();
+        EducationDTO result = service.updateEducation(validId, dto);
 
         assertThat(result).isEqualTo(dto);
         verify(mapper).updateEntityFromDTO(dto, entity);
+        verify(repository).update(entity);
     }
 
     @Test
     void updateEducation_withInvalidId_throwsBadRequest() {
-        assertThatThrownBy(() -> service.updateEducation(TestDataFactory.INVALID_ID, dto).await().indefinitely())
+        assertThatThrownBy(() -> service.updateEducation(TestDataFactory.INVALID_ID, dto))
                 .isInstanceOf(ApplicationException.class)
                 .extracting("statusCode").isEqualTo(AppConstants.STATUS_BAD_REQUEST);
     }
 
     @Test
     void updateEducation_withUnknownId_throwsNotFound() {
-        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Uni.createFrom().item(Optional.empty()));
+        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.updateEducation(validId, dto).await().indefinitely())
+        assertThatThrownBy(() -> service.updateEducation(validId, dto))
                 .isInstanceOf(ApplicationException.class)
                 .extracting("statusCode").isEqualTo(AppConstants.STATUS_NOT_FOUND);
     }
 
     @Test
     void deleteEducation_withValidId_deletesAndReturnsSuccess() {
-        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Uni.createFrom().item(Optional.of(entity)));
-        when(repository.deleteById(entity.id)).thenReturn(Uni.createFrom().item(true));
+        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Optional.of(entity));
 
-        String result = service.deleteEducation(validId).await().indefinitely();
+        String result = service.deleteEducation(validId);
 
         assertThat(result).isEqualTo(AppConstants.DELETED_SUCCESSFULLY);
+        verify(repository).deleteById(entity.id);
     }
 
     @Test
     void deleteEducation_withUnknownId_throwsNotFound() {
-        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Uni.createFrom().item(Optional.empty()));
+        when(repository.findByIdOptional(any(ObjectId.class))).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.deleteEducation(validId).await().indefinitely())
+        assertThatThrownBy(() -> service.deleteEducation(validId))
                 .isInstanceOf(ApplicationException.class)
                 .extracting("statusCode").isEqualTo(AppConstants.STATUS_NOT_FOUND);
     }
@@ -141,11 +140,10 @@ class EducationServiceImplTest {
         EducationDTO noEnd = new EducationDTO();
         noEnd.setStartYear(2018);
 
-        when(repository.listAll()).thenReturn(Uni.createFrom().item(List.of()));
+        when(repository.listAll()).thenReturn(List.of());
         when(mapper.toEntity(noEnd)).thenReturn(entity);
-        when(repository.persist(entity)).thenReturn(Uni.createFrom().item(entity));
 
-        assertThatCode(() -> service.createEducation(noEnd).await().indefinitely())
+        assertThatCode(() -> service.createEducation(noEnd))
                 .doesNotThrowAnyException();
     }
 }

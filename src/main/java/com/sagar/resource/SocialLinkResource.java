@@ -3,8 +3,6 @@ package com.sagar.resource;
 import com.sagar.dto.ResponseDTO;
 import com.sagar.service.SocialLinkService;
 import com.sagar.util.AppConstants;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -20,25 +18,19 @@ public class SocialLinkResource extends CommonResource {
     private SocialLinkService service;
 
     @POST
-    public Uni<ResponseDTO<String>> createSocialLink(@Valid SocialDTO socialDTO) {
-        return Uni.createFrom().deferred(() -> service.createSocialLink(socialDTO))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.SOCIAL_CREATED, AppConstants.STATUS_CREATED, r));
+    public ResponseDTO<String> createSocialLink(@Valid SocialDTO socialDTO) {
+        return buildResponse(AppConstants.SOCIAL_CREATED, AppConstants.STATUS_CREATED, service.createSocialLink(socialDTO));
     }
 
     @PATCH
     @Path("/{id}")
-    public Uni<ResponseDTO<SocialDTO>> updateSocialLink(@PathParam("id") String id, @Valid SocialDTO socialDTO) {
-        return Uni.createFrom().deferred(() -> service.updateSocialLink(id, socialDTO))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.SOCIAL_UPDATED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<SocialDTO> updateSocialLink(@PathParam("id") String id, @Valid SocialDTO socialDTO) {
+        return buildResponse(AppConstants.SOCIAL_UPDATED, AppConstants.STATUS_OK, service.updateSocialLink(id, socialDTO));
     }
 
     @DELETE
     @Path("/{id}")
-    public Uni<ResponseDTO<String>> deleteSocialLink(@PathParam("id") String id) {
-        return Uni.createFrom().deferred(() -> service.deleteSocialLink(id))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.SOCIAL_DELETED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<String> deleteSocialLink(@PathParam("id") String id) {
+        return buildResponse(AppConstants.SOCIAL_DELETED, AppConstants.STATUS_OK, service.deleteSocialLink(id));
     }
 }

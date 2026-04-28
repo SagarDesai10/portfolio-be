@@ -6,7 +6,6 @@ import com.sagar.mapper.ProjectMapper;
 import com.sagar.repository.ProjectRepository;
 import com.sagar.service.ProjectService;
 import com.sagar.util.AppConstants;
-import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.beans.ProjectDTO;
@@ -24,41 +23,36 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectMapper mapper;
 
     @Override
-    public Uni<String> createProject(ProjectDTO projectDTO) {
-        return repository.persist(mapper.toEntity(projectDTO))
-                .map(e -> AppConstants.CREATED_SUCCESSFULLY);
+    public String createProject(ProjectDTO projectDTO) {
+        repository.persist(mapper.toEntity(projectDTO));
+        return AppConstants.CREATED_SUCCESSFULLY;
     }
 
     @Override
-    public Uni<ProjectDTO> updateProject(String id, ProjectDTO projectDTO) {
-        return findProject(id)
-                .flatMap(entity -> {
-                    mapper.updateEntityFromDTO(projectDTO, entity);
-                    return repository.update(entity);
-                })
-                .map(mapper::toDTO);
+    public ProjectDTO updateProject(String id, ProjectDTO projectDTO) {
+        Project entity = findProject(id);
+        mapper.updateEntityFromDTO(projectDTO, entity);
+        repository.update(entity);
+        return mapper.toDTO(entity);
     }
 
     @Override
-    public Uni<String> deleteProject(String id) {
-        return findProject(id)
-                .flatMap(entity -> repository.deleteById(entity.id))
-                .map(deleted -> AppConstants.DELETED_SUCCESSFULLY);
+    public String deleteProject(String id) {
+        Project entity = findProject(id);
+        repository.deleteById(entity.id);
+        return AppConstants.DELETED_SUCCESSFULLY;
     }
 
     @Override
-    public Uni<List<ProjectDTO>> getAllProjects() {
-        return repository.listAll()
-                .map(mapper::toDTOList);
+    public List<ProjectDTO> getAllProjects() {
+        return mapper.toDTOList(repository.listAll());
     }
 
-    private Uni<Project> findProject(String id) {
+    private Project findProject(String id) {
         if (id == null || !ObjectId.isValid(id)) {
-            return Uni.createFrom().failure(
-                    new ApplicationException(AppConstants.INVALID_ID, AppConstants.STATUS_BAD_REQUEST));
+            throw new ApplicationException(AppConstants.INVALID_ID, AppConstants.STATUS_BAD_REQUEST);
         }
         return repository.findByIdOptional(new ObjectId(id))
-                .map(opt -> opt.orElseThrow(() ->
-                        new ApplicationException(AppConstants.PROJECT_NOT_FOUND, AppConstants.STATUS_NOT_FOUND)));
+                .orElseThrow(() -> new ApplicationException(AppConstants.PROJECT_NOT_FOUND, AppConstants.STATUS_NOT_FOUND));
     }
 }

@@ -5,8 +5,6 @@ import com.sagar.dto.ResponseDTO;
 import com.sagar.dto.TokenResponseDTO;
 import com.sagar.service.AuthService;
 import com.sagar.util.AppConstants;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -29,9 +27,7 @@ public class LoginResource extends CommonResource {
     AuthService authService;
 
     @POST
-    public Uni<ResponseDTO<TokenResponseDTO>> login(@Valid LoginRequestDTO request) {
-        return Uni.createFrom().item(() -> authService.login(request))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.AUTH_LOGIN_SUCCESS, AppConstants.STATUS_OK, r));
+    public ResponseDTO<TokenResponseDTO> login(@Valid LoginRequestDTO request) {
+        return buildResponse(AppConstants.AUTH_LOGIN_SUCCESS, AppConstants.STATUS_OK, authService.login(request));
     }
 }

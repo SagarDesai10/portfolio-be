@@ -3,8 +3,6 @@ package com.sagar.resource;
 import com.sagar.dto.ResponseDTO;
 import com.sagar.service.CertificateService;
 import com.sagar.util.AppConstants;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -20,25 +18,19 @@ public class CertificateResource extends CommonResource {
     private CertificateService service;
 
     @POST
-    public Uni<ResponseDTO<String>> createCertificate(@Valid CertificateDTO certificateDTO) {
-        return Uni.createFrom().deferred(() -> service.createCertificate(certificateDTO))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.CERTIFICATE_CREATED, AppConstants.STATUS_CREATED, r));
+    public ResponseDTO<String> createCertificate(@Valid CertificateDTO certificateDTO) {
+        return buildResponse(AppConstants.CERTIFICATE_CREATED, AppConstants.STATUS_CREATED, service.createCertificate(certificateDTO));
     }
 
     @PATCH
     @Path("/{id}")
-    public Uni<ResponseDTO<CertificateDTO>> updateCertificate(@PathParam("id") String id, @Valid CertificateDTO certificateDTO) {
-        return Uni.createFrom().deferred(() -> service.updateCertificate(id, certificateDTO))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.CERTIFICATE_UPDATED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<CertificateDTO> updateCertificate(@PathParam("id") String id, @Valid CertificateDTO certificateDTO) {
+        return buildResponse(AppConstants.CERTIFICATE_UPDATED, AppConstants.STATUS_OK, service.updateCertificate(id, certificateDTO));
     }
 
     @DELETE
     @Path("/{id}")
-    public Uni<ResponseDTO<String>> deleteCertificate(@PathParam("id") String id) {
-        return Uni.createFrom().deferred(() -> service.deleteCertificate(id))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.CERTIFICATE_DELETED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<String> deleteCertificate(@PathParam("id") String id) {
+        return buildResponse(AppConstants.CERTIFICATE_DELETED, AppConstants.STATUS_OK, service.deleteCertificate(id));
     }
 }

@@ -6,7 +6,6 @@ import com.sagar.mapper.SocialLinkMapper;
 import com.sagar.repository.SocialLinkRepository;
 import com.sagar.service.SocialLinkService;
 import com.sagar.util.AppConstants;
-import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.beans.SocialDTO;
@@ -24,41 +23,36 @@ public class SocialLinkServiceImpl implements SocialLinkService {
     private SocialLinkMapper mapper;
 
     @Override
-    public Uni<String> createSocialLink(SocialDTO socialDTO) {
-        return repository.persist(mapper.toEntity(socialDTO))
-                .map(e -> AppConstants.CREATED_SUCCESSFULLY);
+    public String createSocialLink(SocialDTO socialDTO) {
+        repository.persist(mapper.toEntity(socialDTO));
+        return AppConstants.CREATED_SUCCESSFULLY;
     }
 
     @Override
-    public Uni<SocialDTO> updateSocialLink(String id, SocialDTO socialDTO) {
-        return findSocialLink(id)
-                .flatMap(entity -> {
-                    mapper.updateEntityFromDTO(socialDTO, entity);
-                    return repository.update(entity);
-                })
-                .map(mapper::toDTO);
+    public SocialDTO updateSocialLink(String id, SocialDTO socialDTO) {
+        SocialLink entity = findSocialLink(id);
+        mapper.updateEntityFromDTO(socialDTO, entity);
+        repository.update(entity);
+        return mapper.toDTO(entity);
     }
 
     @Override
-    public Uni<String> deleteSocialLink(String id) {
-        return findSocialLink(id)
-                .flatMap(entity -> repository.deleteById(entity.id))
-                .map(deleted -> AppConstants.DELETED_SUCCESSFULLY);
+    public String deleteSocialLink(String id) {
+        SocialLink entity = findSocialLink(id);
+        repository.deleteById(entity.id);
+        return AppConstants.DELETED_SUCCESSFULLY;
     }
 
     @Override
-    public Uni<List<SocialDTO>> getAllSocialLink() {
-        return repository.listAll()
-                .map(mapper::toDTOList);
+    public List<SocialDTO> getAllSocialLink() {
+        return mapper.toDTOList(repository.listAll());
     }
 
-    private Uni<SocialLink> findSocialLink(String id) {
+    private SocialLink findSocialLink(String id) {
         if (id == null || !ObjectId.isValid(id)) {
-            return Uni.createFrom().failure(
-                    new ApplicationException(AppConstants.INVALID_ID, AppConstants.STATUS_BAD_REQUEST));
+            throw new ApplicationException(AppConstants.INVALID_ID, AppConstants.STATUS_BAD_REQUEST);
         }
         return repository.findByIdOptional(new ObjectId(id))
-                .map(opt -> opt.orElseThrow(() ->
-                        new ApplicationException(AppConstants.SOCIAL_NOT_FOUND, AppConstants.STATUS_NOT_FOUND)));
+                .orElseThrow(() -> new ApplicationException(AppConstants.SOCIAL_NOT_FOUND, AppConstants.STATUS_NOT_FOUND));
     }
 }

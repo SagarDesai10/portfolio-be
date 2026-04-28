@@ -3,8 +3,6 @@ package com.sagar.resource;
 import com.sagar.dto.ResponseDTO;
 import com.sagar.service.AboutService;
 import com.sagar.util.AppConstants;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.annotation.Resource;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -22,32 +20,24 @@ public class AboutResource extends CommonResource {
     AboutService aboutService;
 
     @POST
-    public Uni<ResponseDTO<String>> createAboutDetails(@Valid AboutDTO aboutDTO) {
-        return Uni.createFrom().deferred(() -> aboutService.createAbout(aboutDTO))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.ABOUT_CREATED, AppConstants.STATUS_CREATED, r));
+    public ResponseDTO<String> createAboutDetails(@Valid AboutDTO aboutDTO) {
+        return buildResponse(AppConstants.ABOUT_CREATED, AppConstants.STATUS_CREATED, aboutService.createAbout(aboutDTO));
     }
 
     @GET
-    public Uni<ResponseDTO<AboutDTO>> getAboutDetails() {
-        return Uni.createFrom().deferred(() -> aboutService.getAbout())
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.ABOUT_FETCHED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<AboutDTO> getAboutDetails() {
+        return buildResponse(AppConstants.ABOUT_FETCHED, AppConstants.STATUS_OK, aboutService.getAbout());
     }
 
     @PATCH
     @Path("/{id}")
-    public Uni<ResponseDTO<AboutDTO>> updateAboutDetails(@PathParam("id") String id, @Valid AboutDTO aboutDTO) {
-        return Uni.createFrom().deferred(() -> aboutService.updateAbout(id, aboutDTO))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.ABOUT_UPDATED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<AboutDTO> updateAboutDetails(@PathParam("id") String id, @Valid AboutDTO aboutDTO) {
+        return buildResponse(AppConstants.ABOUT_UPDATED, AppConstants.STATUS_OK, aboutService.updateAbout(id, aboutDTO));
     }
 
     @DELETE
     @Path("/{id}")
-    public Uni<ResponseDTO<String>> deleteAboutDetails(@PathParam("id") String id) {
-        return Uni.createFrom().deferred(() -> aboutService.deleteAbout(id))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .map(r -> buildResponse(AppConstants.ABOUT_DELETED, AppConstants.STATUS_OK, r));
+    public ResponseDTO<String> deleteAboutDetails(@PathParam("id") String id) {
+        return buildResponse(AppConstants.ABOUT_DELETED, AppConstants.STATUS_OK, aboutService.deleteAbout(id));
     }
 }

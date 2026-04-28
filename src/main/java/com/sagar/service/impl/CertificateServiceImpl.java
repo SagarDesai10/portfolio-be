@@ -6,7 +6,6 @@ import com.sagar.mapper.CertificateMapper;
 import com.sagar.repository.CertificateRepository;
 import com.sagar.service.CertificateService;
 import com.sagar.util.AppConstants;
-import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.beans.CertificateDTO;
@@ -24,41 +23,36 @@ public class CertificateServiceImpl implements CertificateService {
     private CertificateMapper mapper;
 
     @Override
-    public Uni<String> createCertificate(CertificateDTO certificateDTO) {
-        return repository.persist(mapper.toEntity(certificateDTO))
-                .map(e -> AppConstants.CREATED_SUCCESSFULLY);
+    public String createCertificate(CertificateDTO certificateDTO) {
+        repository.persist(mapper.toEntity(certificateDTO));
+        return AppConstants.CREATED_SUCCESSFULLY;
     }
 
     @Override
-    public Uni<CertificateDTO> updateCertificate(String id, CertificateDTO certificateDTO) {
-        return findCertificate(id)
-                .flatMap(entity -> {
-                    mapper.updateEntityFromDTO(certificateDTO, entity);
-                    return repository.update(entity);
-                })
-                .map(mapper::toDTO);
+    public CertificateDTO updateCertificate(String id, CertificateDTO certificateDTO) {
+        Certificate entity = findCertificate(id);
+        mapper.updateEntityFromDTO(certificateDTO, entity);
+        repository.update(entity);
+        return mapper.toDTO(entity);
     }
 
     @Override
-    public Uni<String> deleteCertificate(String id) {
-        return findCertificate(id)
-                .flatMap(entity -> repository.deleteById(entity.id))
-                .map(deleted -> AppConstants.DELETED_SUCCESSFULLY);
+    public String deleteCertificate(String id) {
+        Certificate entity = findCertificate(id);
+        repository.deleteById(entity.id);
+        return AppConstants.DELETED_SUCCESSFULLY;
     }
 
     @Override
-    public Uni<List<CertificateDTO>> getAllCertificates() {
-        return repository.listAll()
-                .map(mapper::toDTOList);
+    public List<CertificateDTO> getAllCertificates() {
+        return mapper.toDTOList(repository.listAll());
     }
 
-    private Uni<Certificate> findCertificate(String id) {
+    private Certificate findCertificate(String id) {
         if (id == null || !ObjectId.isValid(id)) {
-            return Uni.createFrom().failure(
-                    new ApplicationException(AppConstants.INVALID_ID, AppConstants.STATUS_BAD_REQUEST));
+            throw new ApplicationException(AppConstants.INVALID_ID, AppConstants.STATUS_BAD_REQUEST);
         }
         return repository.findByIdOptional(new ObjectId(id))
-                .map(opt -> opt.orElseThrow(() ->
-                        new ApplicationException(AppConstants.CERTIFICATE_NOT_FOUND, AppConstants.STATUS_NOT_FOUND)));
+                .orElseThrow(() -> new ApplicationException(AppConstants.CERTIFICATE_NOT_FOUND, AppConstants.STATUS_NOT_FOUND));
     }
 }
