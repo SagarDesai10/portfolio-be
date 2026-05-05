@@ -3,7 +3,6 @@ package com.sagar.resource;
 import com.sagar.dto.ResponseDTO;
 import com.sagar.service.*;
 import com.sagar.util.AppConstants;
-import jakarta.annotation.Resource;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -11,7 +10,7 @@ import org.acme.beans.*;
 
 import java.util.List;
 
-@Resource
+@Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class PublicResource extends CommonResource {
