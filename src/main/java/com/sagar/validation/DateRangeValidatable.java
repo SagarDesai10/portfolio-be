@@ -12,6 +12,6 @@ public interface DateRangeValidatable {
     ObjectId getEntityId();
 
     /** The resolved date range for this entity. */
-    DateRange getDateRange();
+    DateRange resolveDateRange();
 }
 

@@ -42,10 +42,10 @@ public class DateRangeOverlapValidator {
                 continue;
             }
 
-            if (candidate.overlaps(record.getDateRange())) {
+            if (candidate.overlaps(record.resolveDateRange())) {
                 throw new ApplicationException(
                         entityLabel + " date range " + candidate
-                                + " overlaps with an existing entry " + record.getDateRange(),
+                                + " overlaps with an existing entry " + record.resolveDateRange(),
                         Response.Status.CONFLICT.getStatusCode()
                 );
             }

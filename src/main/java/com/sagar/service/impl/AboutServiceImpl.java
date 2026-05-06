@@ -78,7 +78,7 @@ public class AboutServiceImpl implements AboutService {
         long totalMonths = 0;
         for (Experience exp : experiences) {
             try {
-                DateRange range = exp.getDateRange();
+                DateRange range = exp.resolveDateRange();
                 totalMonths += ChronoUnit.MONTHS.between(
                         range.getStart().atDay(1),
                         range.getEnd().atDay(1)
