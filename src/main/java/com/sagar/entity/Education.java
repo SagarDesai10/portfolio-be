@@ -3,6 +3,7 @@ package com.sagar.entity;
 import com.sagar.validation.DateRange;
 import com.sagar.validation.DateRangeValidatable;
 import io.quarkus.mongodb.panache.common.MongoEntity;
+import org.bson.codecs.pojo.annotations.BsonIgnore;
 import org.bson.types.ObjectId;
 
 import java.time.Month;
@@ -29,6 +30,7 @@ public class Education implements DateRangeValidatable {
      * Treats startYear as Jan-YYYY and endYear as Dec-YYYY (or current month if null).
      */
     @Override
+    @BsonIgnore
     public DateRange getDateRange() {
         YearMonth start = YearMonth.of(startYear, Month.JANUARY);
         YearMonth end = (endYear != null)

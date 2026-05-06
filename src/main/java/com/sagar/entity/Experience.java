@@ -4,6 +4,7 @@ import com.sagar.validation.DateRange;
 import com.sagar.validation.DateRangeParser;
 import com.sagar.validation.DateRangeValidatable;
 import io.quarkus.mongodb.panache.common.MongoEntity;
+import org.bson.codecs.pojo.annotations.BsonIgnore;
 import org.bson.types.ObjectId;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class Experience implements DateRangeValidatable {
     }
 
     @Override
+    @BsonIgnore
     public DateRange getDateRange() {
         return new DateRange(
                 DateRangeParser.parseRequired(startDate, "startDate"),
