@@ -6,8 +6,6 @@ import com.sagar.mapper.EducationMapper;
 import com.sagar.repository.EducationRepository;
 import com.sagar.service.EducationService;
 import com.sagar.util.AppConstants;
-import com.sagar.validation.DateRange;
-import com.sagar.validation.DateRangeOverlapValidator;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.beans.EducationDTO;
@@ -26,24 +24,17 @@ public class EducationServiceImpl implements EducationService {
     @Inject
     private EducationMapper mapper;
 
-    @Inject
-    private DateRangeOverlapValidator overlapValidator;
-
     @Override
     public String createEducation(EducationDTO educationDTO) {
-        DateRange candidate = buildAndValidateRange(educationDTO);
-        List<Education> list = repository.listAll();
-        overlapValidator.validate(candidate, null, list, "Education");
+        buildAndValidateRange(educationDTO);
         repository.persist(mapper.toEntity(educationDTO));
         return AppConstants.CREATED_SUCCESSFULLY;
     }
 
     @Override
     public EducationDTO updateEducation(String id, EducationDTO educationDTO) {
-        DateRange candidate = buildAndValidateRange(educationDTO);
+        buildAndValidateRange(educationDTO);
         Education entity = findEducation(id);
-        List<Education> list = repository.listAll();
-        overlapValidator.validate(candidate, id, list, "Education");
         mapper.updateEntityFromDTO(educationDTO, entity);
         repository.update(entity);
         return mapper.toDTO(entity);
@@ -69,7 +60,7 @@ public class EducationServiceImpl implements EducationService {
                 .orElseThrow(() -> new ApplicationException(AppConstants.EDUCATION_NOT_FOUND, AppConstants.STATUS_NOT_FOUND));
     }
 
-    private DateRange buildAndValidateRange(EducationDTO dto) {
+    private void buildAndValidateRange(EducationDTO dto) {
         if (dto.getStartYear() == null) {
             throw new ApplicationException("startYear is required", AppConstants.STATUS_BAD_REQUEST);
         }
@@ -92,7 +83,5 @@ public class EducationServiceImpl implements EducationService {
             }
             end = YearMonth.of(endYearInt, Month.DECEMBER);
         }
-
-        return new DateRange(start, end);
     }
 }
