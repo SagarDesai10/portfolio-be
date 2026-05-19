@@ -6,6 +6,7 @@ import com.sagar.mapper.SocialLinkMapper;
 import com.sagar.repository.SocialLinkRepository;
 import com.sagar.service.SocialLinkService;
 import com.sagar.util.AppConstants;
+import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.beans.SocialDTO;
@@ -45,7 +46,7 @@ public class SocialLinkServiceImpl implements SocialLinkService {
 
     @Override
     public List<SocialDTO> getAllSocialLink() {
-        return mapper.toDTOList(repository.listAll());
+        return mapper.toDTOList(repository.listAll(Sort.descending("_id")));
     }
 
     private SocialLink findSocialLink(String id) {

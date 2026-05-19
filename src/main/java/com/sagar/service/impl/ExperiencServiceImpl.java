@@ -14,6 +14,7 @@ import jakarta.inject.Inject;
 import org.acme.beans.ExperienceDTO;
 import org.bson.types.ObjectId;
 
+import java.util.Comparator;
 import java.util.List;
 
 @ApplicationScoped
@@ -57,7 +58,12 @@ public class ExperiencServiceImpl implements ExperienceService {
 
     @Override
     public List<ExperienceDTO> getAllExperiences() {
-        return mapper.toDTOList(repository.listAll());
+        List<Experience> list = repository.listAll();
+        list.sort(Comparator.comparing(
+                e -> DateRangeParser.parseRequired(e.startDate, "startDate"),
+                Comparator.reverseOrder()
+        ));
+        return mapper.toDTOList(list);
     }
 
     private Experience findExperience(String id) {

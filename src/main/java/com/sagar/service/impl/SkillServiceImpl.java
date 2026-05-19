@@ -6,6 +6,7 @@ import com.sagar.mapper.SkillMapper;
 import com.sagar.repository.SkillRepository;
 import com.sagar.service.SkillService;
 import com.sagar.util.AppConstants;
+import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.beans.SkillDTO;
@@ -45,7 +46,7 @@ public class SkillServiceImpl implements SkillService {
 
     @Override
     public List<SkillDTO> getAllSkills() {
-        return mapper.toDTOList(repository.listAll());
+        return mapper.toDTOList(repository.listAll(Sort.descending("_id")));
     }
 
     private Skill findSkill(String id) {

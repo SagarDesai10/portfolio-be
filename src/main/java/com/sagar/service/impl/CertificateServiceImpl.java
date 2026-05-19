@@ -6,6 +6,7 @@ import com.sagar.mapper.CertificateMapper;
 import com.sagar.repository.CertificateRepository;
 import com.sagar.service.CertificateService;
 import com.sagar.util.AppConstants;
+import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.beans.CertificateDTO;
@@ -45,7 +46,7 @@ public class CertificateServiceImpl implements CertificateService {
 
     @Override
     public List<CertificateDTO> getAllCertificates() {
-        return mapper.toDTOList(repository.listAll());
+        return mapper.toDTOList(repository.listAll(Sort.descending("year").and("_id", Sort.Direction.Descending)));
     }
 
     private Certificate findCertificate(String id) {

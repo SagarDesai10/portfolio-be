@@ -6,6 +6,7 @@ import com.sagar.mapper.ProjectMapper;
 import com.sagar.repository.ProjectRepository;
 import com.sagar.service.ProjectService;
 import com.sagar.util.AppConstants;
+import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.beans.ProjectDTO;
@@ -45,7 +46,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<ProjectDTO> getAllProjects() {
-        return mapper.toDTOList(repository.listAll());
+        return mapper.toDTOList(repository.listAll(Sort.descending("_id")));
     }
 
     private Project findProject(String id) {

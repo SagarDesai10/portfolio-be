@@ -6,13 +6,12 @@ import com.sagar.mapper.EducationMapper;
 import com.sagar.repository.EducationRepository;
 import com.sagar.service.EducationService;
 import com.sagar.util.AppConstants;
+import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.beans.EducationDTO;
 import org.bson.types.ObjectId;
 
-import java.time.Month;
-import java.time.YearMonth;
 import java.util.List;
 
 @ApplicationScoped
@@ -49,7 +48,7 @@ public class EducationServiceImpl implements EducationService {
 
     @Override
     public List<EducationDTO> getAllEducations() {
-        return mapper.toDTOList(repository.listAll());
+        return mapper.toDTOList(repository.listAll(Sort.descending("startYear")));
     }
 
     private Education findEducation(String id) {
@@ -64,24 +63,8 @@ public class EducationServiceImpl implements EducationService {
         if (dto.getStartYear() == null) {
             throw new ApplicationException("startYear is required", AppConstants.STATUS_BAD_REQUEST);
         }
-        int startYearInt;
-        try {
-            startYearInt = dto.getStartYear();
-        } catch (NumberFormatException e) {
-            throw new ApplicationException("startYear must be a valid year (e.g. 2020)", AppConstants.STATUS_BAD_REQUEST);
-        }
-        YearMonth start = YearMonth.of(startYearInt, Month.JANUARY);
-        YearMonth end;
-        if (dto.getEndYear() == null) {
-            end = YearMonth.now();
-        } else {
-            int endYearInt;
-            try {
-                endYearInt = dto.getEndYear();
-            } catch (NumberFormatException e) {
-                throw new ApplicationException("endYear must be a valid year (e.g. 2024)", AppConstants.STATUS_BAD_REQUEST);
-            }
-            end = YearMonth.of(endYearInt, Month.DECEMBER);
+        if (dto.getEndYear() != null && dto.getEndYear() < dto.getStartYear()) {
+            throw new ApplicationException("endYear must be greater than or equal to startYear", AppConstants.STATUS_BAD_REQUEST);
         }
     }
 }
